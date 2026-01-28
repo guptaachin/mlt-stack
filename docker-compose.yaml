@@ -70,12 +70,6 @@ services:
       - "3200:3200"   # Tempo HTTP API
     networks:
       - mlt_stack_nw
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3200/ready || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
 
   # OpenTelemetry Collector - receives, processes, and exports telemetry data
   otel-collector:
@@ -92,8 +86,7 @@ services:
     networks:
       - mlt_stack_nw
     depends_on:
-      tempo:
-        condition: service_healthy
+      - tempo
 
 volumes:
   tempo-data:
