@@ -7,8 +7,8 @@ services:
   grafana:
     build:
       context: './grafana'
-    container_name: 'mop-grafana'
-    hostname: 'mop-grafana'
+    container_name: 'mlt-grafana'
+    hostname: 'mlt-grafana'
     restart: 'always'
     ports:
       - '3000:3000'
@@ -27,7 +27,7 @@ services:
   # Automatically configured with Grafana admin credentials (no token required)
   # Uses username/password authentication from grafana.ini configuration
   grafana-mcp:
-    container_name: 'mop-grafana-mcp'
+    container_name: 'mlt-grafana-mcp'
     image: mcp/grafana:latest
     depends_on:
       grafana:
@@ -35,8 +35,8 @@ services:
     environment:
       - GRAFANA_URL=http://grafana:3000
       # Using username/password authentication (matches grafana.ini credentials)
-      - GRAFANA_USERNAME=mopadmin
-      - GRAFANA_PASSWORD=moppassword
+      - GRAFANA_USERNAME=mltadmin
+      - GRAFANA_PASSWORD=mltpassword
       # Optional: For multi-organization support
       # - GRAFANA_ORG_ID=1
       # Alternative: If you prefer service account token, uncomment below and comment username/password
@@ -58,8 +58,8 @@ services:
   # Receives traces via OTLP (gRPC and HTTP)
   tempo:
     image: grafana/tempo:latest
-    container_name: 'mop-tempo'
-    hostname: 'mop-tempo'
+    container_name: 'mlt-tempo'
+    hostname: 'mlt-tempo'
     command: ["-config.file=/etc/tempo.yaml"]
     volumes:
       - ./tempo/tempo.yaml:/etc/tempo.yaml:ro

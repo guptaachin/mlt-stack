@@ -1,0 +1,49 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "# Welcome to MLT Stack\n\nThis stack includes:\n- **Grafana** - Visualization\n- **Tempo** - Distributed Tracing\n\n## Getting Started\n1. Go to **Explore** in the left sidebar\n2. Select **Tempo** as the datasource\n3. Search for traces by Trace ID or use TraceQL\n\n## Send Test Traces\nUse OTLP endpoints:\n- gRPC: `localhost:4317`\n- HTTP: `localhost:4318`",
+        "mode": "markdown"
+      },
+      "title": "Getting Started",
+      "type": "text"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["mlt-stack"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "MLT Stack - Home",
+  "uid": "mlt-stack-home",
+  "version": 1,
+  "weekStart": ""
+}
