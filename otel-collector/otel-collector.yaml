@@ -14,11 +14,6 @@ receivers:
   fluentforward:
     endpoint: 0.0.0.0:24224
 
-  # Docker stats receiver for container metrics
-  docker_stats:
-    endpoint: unix:///var/run/docker.sock
-    collection_interval: 10s
-
 processors:
   # Batch processor for better performance
   batch:
@@ -65,7 +60,7 @@ service:
 
     # Metrics pipeline
     metrics:
-      receivers: [otlp, docker_stats]
+      receivers: [otlp]
       processors: [batch, resource]
       exporters: [prometheusremotewrite, debug]
 
