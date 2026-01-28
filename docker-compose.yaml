@@ -1,0 +1,81 @@
+networks:
+  mlt_stack_nw:
+    name: mlt_stack_nw
+
+services:
+  # Grafana for vizualizing
+  grafana:
+    build:
+      context: './grafana'
+    container_name: 'mop-grafana'
+    hostname: 'mop-grafana'
+    restart: 'always'
+    ports:
+      - '3000:3000'
+    volumes:
+      - "./grafana/provisioning:/etc/grafana/provisioning"
+    networks:
+      - mlt_stack_nw
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Grafana MCP Server - Model Context Protocol server for AI-driven Grafana interactions
+  # Automatically configured with Grafana admin credentials (no token required)
+  # Uses username/password authentication from grafana.ini configuration
+  grafana-mcp:
+    container_name: 'mop-grafana-mcp'
+    image: mcp/grafana:latest
+    depends_on:
+      grafana:
+        condition: service_healthy
+    environment:
+      - GRAFANA_URL=http://grafana:3000
+      # Using username/password authentication (matches grafana.ini credentials)
+      - GRAFANA_USERNAME=mopadmin
+      - GRAFANA_PASSWORD=moppassword
+      # Optional: For multi-organization support
+      # - GRAFANA_ORG_ID=1
+      # Alternative: If you prefer service account token, uncomment below and comment username/password
+      # - GRAFANA_SERVICE_ACCOUNT_TOKEN=${GRAFANA_SERVICE_ACCOUNT_TOKEN:-}
+    ports:
+      - '8001:8000'
+    restart: always
+    networks:
+      - mlt_stack_nw
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Tempo - Distributed tracing backend
+  # Easy to set up, integrates seamlessly with Grafana
+  # Receives traces via OTLP (gRPC and HTTP)
+  tempo:
+    image: grafana/tempo:latest
+    container_name: 'mop-tempo'
+    hostname: 'mop-tempo'
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "3200:3200"   # Tempo HTTP API
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    networks:
+      - mlt_stack_nw
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3200/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  tempo-data:
