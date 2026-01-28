@@ -1,10 +1,8 @@
-# Tempo Configuration
-# Simple local setup for learning and development
-
+# Tempo v2.6 Configuration
 server:
   http_listen_port: 3200
+  grpc_listen_port: 9095
 
-# Distributor receives traces and forwards to ingester
 distributor:
   receivers:
     otlp:
@@ -14,11 +12,9 @@ distributor:
         http:
           endpoint: "0.0.0.0:4318"
 
-# Ingester batches traces and writes to storage
 ingester:
   max_block_duration: 5m
 
-# Storage configuration - local filesystem for simplicity
 storage:
   trace:
     backend: local

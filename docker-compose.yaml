@@ -59,7 +59,7 @@ services:
   # Easy to set up, integrates seamlessly with Grafana
   # Receives traces via OTLP (gRPC and HTTP)
   tempo:
-    image: grafana/tempo:latest
+    image: grafana/tempo:2.6.1
     container_name: 'mlt-tempo'
     hostname: 'mlt-tempo'
     command: ["-config.file=/etc/tempo.yaml"]
