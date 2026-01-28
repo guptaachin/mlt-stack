@@ -18,6 +18,12 @@ services:
       - mlt_stack_nw
     depends_on:
       - otel-collector
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: "host.docker.internal:24224"
+        fluentd-async: "true"
+        tag: "grafana"
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       interval: 10s
@@ -79,14 +85,52 @@ services:
     command: ["--config=/etc/otel-collector.yaml"]
     volumes:
       - ./otel-collector/otel-collector.yaml:/etc/otel-collector.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:
       - "4317:4317"   # OTLP gRPC
       - "4318:4318"   # OTLP HTTP
       - "8888:8888"   # Prometheus metrics (collector self-observability)
+      - "24224:24224" # Fluentd forward protocol for container logs
     networks:
       - mlt_stack_nw
     depends_on:
       - tempo
+      - loki
+      - prometheus
+
+  # Loki - Log aggregation system
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: 'mlt-loki'
+    hostname: 'mlt-loki'
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    volumes:
+      - ./loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"   # Loki HTTP API
+    networks:
+      - mlt_stack_nw
+
+  # Prometheus - Metrics database
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: 'mlt-prometheus'
+    hostname: 'mlt-prometheus'
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-remote-write-receiver'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"   # Prometheus HTTP API
+    networks:
+      - mlt_stack_nw
 
 volumes:
   tempo-data:
+  loki-data:
+  prometheus-data:

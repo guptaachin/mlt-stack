@@ -6,8 +6,44 @@ datasources:
     type: tempo
     access: proxy
     url: http://tempo:3200
-    isDefault: true
+    uid: tempo
     jsonData:
       httpMethod: GET
       nodeGraph:
         enabled: true
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: true
+        filterBySpanID: true
+      tracesToMetrics:
+        datasourceUid: prometheus
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+
+  # Loki - Log Aggregation
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    uid: loki
+    isDefault: true
+    jsonData:
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: '"traceId":"(\w+)"'
+          name: TraceID
+          url: '$${__value.raw}'
+
+  # Prometheus - Metrics
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    uid: prometheus
+    jsonData:
+      httpMethod: POST
+      exemplarTraceIdDestinations:
+        - name: traceId
+          datasourceUid: tempo

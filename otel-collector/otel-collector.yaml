@@ -10,6 +10,15 @@ receivers:
       http:
         endpoint: "0.0.0.0:4318"
 
+  # Fluentforward receiver for Docker container logs
+  fluentforward:
+    endpoint: 0.0.0.0:24224
+
+  # Docker stats receiver for container metrics
+  docker_stats:
+    endpoint: unix:///var/run/docker.sock
+    collection_interval: 10s
+
 processors:
   # Batch processor for better performance
   batch:
@@ -30,6 +39,18 @@ exporters:
     tls:
       insecure: true
 
+  # Export metrics to Prometheus (via remote write)
+  prometheusremotewrite:
+    endpoint: http://prometheus:9090/api/v1/write
+    tls:
+      insecure: true
+
+  # Export logs to Loki via OTLP HTTP
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
+
   # Debug exporter for troubleshooting (logs to stdout)
   debug:
     verbosity: basic
@@ -41,3 +62,15 @@ service:
       receivers: [otlp]
       processors: [batch, resource]
       exporters: [otlp/tempo, debug]
+
+    # Metrics pipeline
+    metrics:
+      receivers: [otlp, docker_stats]
+      processors: [batch, resource]
+      exporters: [prometheusremotewrite, debug]
+
+    # Logs pipeline
+    logs:
+      receivers: [otlp, fluentforward]
+      processors: [batch, resource]
+      exporters: [otlphttp/loki, debug]
