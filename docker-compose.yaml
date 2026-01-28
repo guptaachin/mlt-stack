@@ -16,6 +16,8 @@ services:
       - "./grafana/provisioning:/etc/grafana/provisioning"
     networks:
       - mlt_stack_nw
+    depends_on:
+      - otel-collector
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       interval: 10s
@@ -66,8 +68,6 @@ services:
       - tempo-data:/var/tempo
     ports:
       - "3200:3200"   # Tempo HTTP API
-      - "4317:4317"   # OTLP gRPC
-      - "4318:4318"   # OTLP HTTP
     networks:
       - mlt_stack_nw
     healthcheck:
@@ -76,6 +76,24 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+
+  # OpenTelemetry Collector - receives, processes, and exports telemetry data
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: 'mlt-otel-collector'
+    hostname: 'mlt-otel-collector'
+    command: ["--config=/etc/otel-collector.yaml"]
+    volumes:
+      - ./otel-collector/otel-collector.yaml:/etc/otel-collector.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Prometheus metrics (collector self-observability)
+    networks:
+      - mlt_stack_nw
+    depends_on:
+      tempo:
+        condition: service_healthy
 
 volumes:
   tempo-data:

@@ -1,0 +1,43 @@
+# OpenTelemetry Collector Configuration
+# Receives telemetry from applications and forwards to backends
+
+receivers:
+  # OTLP receiver for traces, metrics, and logs
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+      http:
+        endpoint: "0.0.0.0:4318"
+
+processors:
+  # Batch processor for better performance
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+  # Resource processor to add attributes
+  resource:
+    attributes:
+      - key: collector
+        value: mlt-otel-collector
+        action: insert
+
+exporters:
+  # Export traces to Tempo
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+  # Debug exporter for troubleshooting (logs to stdout)
+  debug:
+    verbosity: basic
+
+service:
+  pipelines:
+    # Traces pipeline
+    traces:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [otlp/tempo, debug]
