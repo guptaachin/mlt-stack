@@ -27,6 +27,15 @@ processors:
         value: mlt-otel-collector
         action: insert
 
+  # Copy fluent.tag log attribute to resource service.name
+  transform/fluentd_service:
+    error_mode: ignore
+    log_statements:
+      - context: log
+        statements:
+          # Always set service.name from fluent.tag when available (overwrite unknown_service)
+          - set(resource.attributes["service.name"], attributes["fluent.tag"]) where attributes["fluent.tag"] != nil
+
 exporters:
   # Export traces to Tempo
   otlp/tempo:
@@ -67,5 +76,5 @@ service:
     # Logs pipeline
     logs:
       receivers: [otlp, fluentforward]
-      processors: [batch, resource]
+      processors: [transform/fluentd_service, batch, resource]
       exporters: [otlphttp/loki, debug]
