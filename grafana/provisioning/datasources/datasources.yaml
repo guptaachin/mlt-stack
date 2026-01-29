@@ -32,7 +32,12 @@ datasources:
     jsonData:
       derivedFields:
         - datasourceUid: tempo
-          matcherRegex: '"traceId":"(\w+)"'
+          matcherRegex: '"traceID":"([a-f0-9]+)"'
+          name: TraceID
+          url: '$${__value.raw}'
+        # Also match lowercase variant
+        - datasourceUid: tempo
+          matcherRegex: '"traceId":"([a-f0-9]+)"'
           name: TraceID
           url: '$${__value.raw}'
 
