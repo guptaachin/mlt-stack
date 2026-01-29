@@ -7,11 +7,11 @@ A complete observability stack for learning and development using Docker Compose
 ```mermaid
 flowchart TB
     subgraph Apps["Applications"]
+        TestApp["Test App<br/>(Python/Flask)"]
         Grafana["Grafana"]
-        YourApps["Your Apps"]
     end
 
-    subgraph Collector["OTEL Collector"]
+    subgraph Collector["OTEL Collector :4317/:4318"]
         Receive["Receive & Process"]
     end
 
@@ -21,16 +21,20 @@ flowchart TB
         Prometheus["Prometheus<br/>(metrics)"]
     end
 
-    Apps -->|"OTLP<br/>(traces, metrics, logs)"| Collector
-    Apps -->|"Fluentd<br/>(container logs)"| Collector
+    TestApp -->|"OTLP gRPC<br/>traces + metrics + logs"| Collector
+    TestApp -->|"Fluentd :24224<br/>container stdout"| Collector
+    Grafana -->|"OTLP gRPC<br/>traces"| Collector
+    Grafana -->|"Fluentd :24224<br/>container stdout"| Collector
     
-    Collector --> Tempo
-    Collector --> Loki
-    Collector --> Prometheus
+    Collector -->|"traces"| Tempo
+    Collector -->|"logs"| Loki
+    Collector -->|"metrics"| Prometheus
 
-    Tempo --> Grafana
-    Loki --> Grafana
-    Prometheus --> Grafana
+    Tempo -->|"query traces"| Grafana
+    Loki -->|"query logs"| Grafana
+    Prometheus -->|"query metrics"| Grafana
+
+    Tempo <-.->|"traceID correlation"| Loki
 ```
 
 ## 📦 Components
@@ -38,6 +42,7 @@ flowchart TB
 | Component | Port | Description |
 |-----------|------|-------------|
 | **Grafana** | 3000 | Visualization & dashboards |
+| **Test App** | 8080 | Demo app emitting correlated MLT data |
 | **Tempo** | 3200 | Distributed tracing backend |
 | **Loki** | 3100 | Log aggregation system |
 | **Prometheus** | 9090 | Metrics database |
