@@ -129,6 +129,33 @@ services:
     networks:
       - mlt_stack_nw
 
+  # Test App - Demonstrates traces, logs, and metrics correlation
+  test-app:
+    build:
+      context: './test-app'
+    container_name: 'mlt-test-app'
+    hostname: 'mlt-test-app'
+    ports:
+      - "8080:8080"
+    networks:
+      - mlt_stack_nw
+    depends_on:
+      - otel-collector
+    environment:
+      - OTEL_SERVICE_NAME=test-app
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: "host.docker.internal:24224"
+        fluentd-async: "true"
+        tag: "test-app"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 volumes:
   tempo-data:
   loki-data:
